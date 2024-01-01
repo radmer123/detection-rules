@@ -1,0 +1,78 @@
+[metadata]
+creation_date = "2023/01/30"
+maturity = "development"
+updated_date = "2023/01/30"
+
+[rule]
+author = ["Jason Deyalsingh"]
+description = """
+Ten mechanizm detekcji identyfikuje zamontowanie obrazu ISO z pliku ZIP istniejącego w katalogu tymczasowym. Z takiej procedury korzysta Qakbot po wykonaniu obejścia znacznika MOTW. Znaczniki sieciowe w systemach operacyjnych Windows informują użytkownika i system, czy określone pliki zostały pobrane z internetu. Taki znacznik ma zablokować lub w inny sposób uniemożliwić uruchomienie niektórych potencjalnie niebezpiecznych działań. Technika obejścia znacznika sieciowego polega na próbie dostarczenia użytkownikom plików bez ustawionego tego znacznika, tak by było możliwe podjęcie potencjalnie niebezpiecznych działań.
+"""
+from = "now-9m"
+index = ["winlogbeat-*"]
+language = "eql"
+license = "MIT"
+name = "Obraz ISO zamontowany z tymczasowego folderu zip"
+note = """## Sugestie dotyczące analizy:
+
+Obraz ISO uruchomiony w katalogu tymczasowym powinien zostać zbadany jako możliwe złośliwe oprogramowanie.  Spróbuj zidentyfikować i ocenić wiadomość e-mail w której dostarczono obraz ISO jako możliwą wiadomość phishingową lub zbadaj domenę, albo witrynę internetową, z której pobrano ISO.  Kontynuuj monitorowanie punktu końcowego pod kątem alertu "Wermgr running reconnaissance commands", identyfikującego podejrzaną aktywność, która wystąpiła po tej aktywności i może być wykorzystana do potwierdzenia zagrożenia jako prawdziwie dodatniego. 
+
+##Odpowiedzi lub środki zaradcze: 
+Jeśli zostanie potwierdzona złośliwa aktywność, przed podjęciem działań naprawczych należy zabezpieczyć punkt końcowy. Aby zidentyfikować możliwe kanały C2 sprawdź wszystkie połączenia sieciowe wychodzące z punktu końcowego.  Ta aktywność została powiązana z oprogramowaniem ransomware i ruchem bocznym przy użyciu Brute Ratel i Cobalt Strike.
+
+##Fałszywe alarmy
+Użytkownicy, np. programiści lub administratorzy sieci mogą legalnie pobrać spakowany plik ISO.
+"""
+references = [
+    "https://www.trendmicro.com/en_us/research/22/j/black-basta-infiltrates-networks-via-qakbot-brute-ratel-and-coba.html"
+]
+risk_score = 50
+rule_id = "8a1d4831-3ce6-4859-9891-28931fa6101d"
+severity = "medium"
+tags = ["Elastic", "Host", "Windows", "Threat Detection", "Defense Evasion"]
+timestamp_override = "event.ingested"
+type = "eql"
+
+query = '''
+any where event.code=="1" and winlog.channel=="Microsoft-Windows-VHDMP-Operational" and winlog.event_data.VhdFileName like~ ("*Temp*","*.zip*","*.iso")
+'''
+
+
+[[rule.threat]]
+framework = "MITRE ATT&CK"
+[[rule.threat.technique]]
+id = "T1027"
+name = "Obfuscated Files or Information"
+reference = "https://attack.mitre.org/techniques/T1027/"
+
+framework = "MITRE ATT&CK"
+[[rule.threat.technique]]
+id = "T1553"
+name = "Subvert Trust Controls"
+reference = "https://attack.mitre.org/techniques/T1553/"
+[[rule.threat.technique.subtechnique]]
+id = "T1553.005"
+name = "Subvert Trust Controls: Mark-of-the-Web"
+reference = "https://attack.mitre.org/techniques/T1553/005/"
+
+
+[rule.threat.tactic]
+id = "TA0005"
+name = "Defense Evasion"
+reference = "https://attack.mitre.org/tactics/TA0005/"
+[[rule.threat]]
+
+framework = "MITRE ATT&CK"
+[[rule.threat.technique]]
+id = "T1204"
+name = "User Execution"
+reference = "https://attack.mitre.org/techniques/T1204/"
+[[rule.threat.technique.subtechnique]]
+id = "T1204.002"
+name = "User Execution: Malicious Image"
+reference = "https://attack.mitre.org/techniques/T1059/002/"
+
+[rule.threat.tactic]
+id = "TA0002"
+name = "Execution"
+reference = "https://attack.mitre.org/tactics/TA0002/"
